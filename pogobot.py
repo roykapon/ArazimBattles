@@ -126,7 +126,7 @@ class MyBot(ArazimBattlesBot):
             targets = self.context.get_monkey_targets(monkey_index)
             if len(targets) > 0:
                 self.context.target_bloon(monkey_index, targets[0].index)
-        self.update_bank()
+        self.update_banks()
     
     def get_player_index(self):
         my_index = self.context.get_current_player_index()
