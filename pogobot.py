@@ -29,19 +29,31 @@ class MyBot(ArazimBattlesBot):
 
     koz = False
     
-    bank = []
-    bank_points_prioritues = {}
+    banks = {Monkeys.NINJA_MONKEY: [], Monkeys.DART_MONKEY: []}
     
-    def create_bank(self):
+    def dist(self, p1, p2):
+        return math.sqrt((p2[0]-p1[0]) ** 2 + (p2[1]-p1[1]) ** 2)
+    
+    def create_banks(self):
         for p in self.context.get_bloon_route():
             p1, p2 = p.start, p.end
-            self.bank.append((math.floor((p1[0] + 3 * p2[0])/4), math.floor((p1[1] + 3 * p2[1])/4)))
+            self.banks[Monkeys.NINJA_MONKEY].append((math.floor((p1[0] + 3 * p2[0])/4), math.floor((p1[1] + 3 * p2[1])/4)))
+            # p2 + 24 * (p2-p1)/|p2 - p1|
+            distance = self.dist(p1, p2)
+            self.banks[Monkeys.DART_MONKEY].append(math.floor(p2[0] + 24 * (p2[0] - p1[0]) / distance), math.floor(p2[1] + 24 * (p2[1] - p1[1]) / distance))
     
-    def update_bank(self):
+    def update_banks(self):
+        #new_banks = {k.copy(): v.copy() for k, v in self.banks.items()}
+        #for bank in self.banks.values():
+            # def mindist(p):
+            #     m = math.inf
+            #     for l in self.context.get_bloon_route():
+            #         p = l.end
+            #         d1 
         pass
     
     def setup(self) -> None:
-        self.create_bank()
+        self.create_banks()
     
     def place_near_point(self, type: Monkeys, point) -> Exception:
         ops = [point]
@@ -73,8 +85,9 @@ class MyBot(ArazimBattlesBot):
         
         self.upgrade_monkeys()
         self.target_baloons()
+        self.update_banks()
 
-    def place_monkeys(self):
+    def place_monkeys(self, type):
         result = Exceptions.OUT_OF_MAP
         index = 0
         while result != Exceptions.OK and result != Exceptions.NOT_ENOUGH_MONEY:
@@ -84,10 +97,10 @@ class MyBot(ArazimBattlesBot):
 
             print(f'in loop {index}')
             # Place Monkeys
-            position = self.bank.pop(0)
+            position = self.banks[type].pop(0)
             print(f'position: {position}')
             result = self.place_near_point(Monkeys.NINJA_MONKEY, position) 
-            self.bank.append(position)
+            self.banks[type].append(position)
         if 24 * self.attempted_position + 24 > 200:
             self.attempted_position_y += 1
             self.attempted_position = 5
