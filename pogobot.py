@@ -42,7 +42,7 @@ class MyBot(ArazimBattlesBot):
             self.banks[Monkeys.NINJA_MONKEY].append((math.floor((p1[0] + 3 * p2[0])/4), math.floor((p1[1] + 3 * p2[1])/4)))
             # p2 + 24 * (p2-p1)/|p2 - p1|
             distance = self.dist(p1, p2)
-            self.banks[Monkeys.DART_MONKEY].append((math.floor(p2[0] + 24 * (p2[0] - p1[0]) / distance), math.floor(p2[1] + 24 * (p2[1] - p1[1]) / distance)))
+            self.banks[Monkeys.DART_MONKEY].append((math.floor(p2[0] + SEARCH_STEP * (p2[0] - p1[0]) / distance), math.floor(p2[1] + SEARCH_STEP * (p2[1] - p1[1]) / distance)))
     
     def setup(self) -> None:
         self.create_banks()
