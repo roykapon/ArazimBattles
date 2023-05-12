@@ -26,8 +26,7 @@ class MyBot(ArazimBattlesBot):
 
     def run(self) -> None:
         if self.context.get_current_time() % BALOON_INTERVAL in [1,2,3]:
-            result = self.context.send_bloons(0, get_ballon_type(self.context.get_current_time())['spaced'])
-            print(result)
+            self.send_baloons()
         if self.context.get_current_time() % MONKEY_INTERVAL == 0:
             self.place_monkeys()
         
@@ -44,7 +43,7 @@ class MyBot(ArazimBattlesBot):
             print(f'in loop {index}')
             # Place Monkeys
             result = self.context.place_monkey(
-                Monkeys.DART_MONKEY, (24 * self.attempted_position + 24, 24 * self.attempted_position_y + 24)
+                Monkeys.NINJA_MONKEY, (24 * self.attempted_position + 24, 24 * self.attempted_position_y + 24)
             )
             if result == Exceptions.OK:
                 self.monkey_count += 1
@@ -62,11 +61,8 @@ class MyBot(ArazimBattlesBot):
     
     def upgrade_monkeys(self):
         for monkey_index in range(self.monkey_count):
-            if self.monkey_levels[monkey_index] == 0:
+            if self.monkey_levels[monkey_index] < 4:
                 if self.context.upgrade_monkey(monkey_index, True):
-                    self.monkey_levels[monkey_index] += 1
-            elif self.monkey_levels[monkey_index] < 5:
-                if self.context.upgrade_monkey(monkey_index, False):
                     self.monkey_levels[monkey_index] += 1
     
     def target_baloons(self):
@@ -74,3 +70,15 @@ class MyBot(ArazimBattlesBot):
             targets = self.context.get_monkey_targets(monkey_index)
             if len(targets) > 0:
                 self.context.target_bloon(monkey_index, targets[0].index)
+    
+    def get_player_index(self):
+        my_index = self.context.get_current_player_index()
+        num_players = self.context.get_player_count()
+        for i in list(range(num_players)):
+            if i != my_index:
+                return i
+        return -1
+
+    def send_baloons(self):
+        result = self.context.send_bloons(self.get_player_index(), get_ballon_type(self.context.get_current_time())['packed'])
+        print(result)
