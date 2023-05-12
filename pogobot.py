@@ -39,10 +39,10 @@ class MyBot(ArazimBattlesBot):
     def create_banks(self):
         for p in self.context.get_bloon_route():
             p1, p2 = p.start, p.end
-            self.banks[Monkeys.NINJA_MONKEY].extend((math.floor((p1[0] + 3 * p2[0])/4), math.floor((p1[1] + 3 * p2[1])/4)))
+            self.banks[Monkeys.NINJA_MONKEY].insert((math.floor((p1[0] + 3 * p2[0])/4), math.floor((p1[1] + 3 * p2[1])/4)))
             # p2 + 24 * (p2-p1)/|p2 - p1|
             distance = self.dist(p1, p2)
-            self.banks[Monkeys.DART_MONKEY].extend(math.floor(p2[0] + 24 * (p2[0] - p1[0]) / distance), math.floor(p2[1] + 24 * (p2[1] - p1[1]) / distance))
+            self.banks[Monkeys.DART_MONKEY].insert((math.floor(p2[0] + 24 * (p2[0] - p1[0]) / distance), math.floor(p2[1] + 24 * (p2[1] - p1[1]) / distance)))
     
     def update_banks(self):
         #new_banks = {k.copy(): v.copy() for k, v in self.banks.items()}
