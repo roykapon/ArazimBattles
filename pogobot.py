@@ -79,6 +79,8 @@ class MyBot(ArazimBattlesBot):
         return res
     
     def run(self) -> None:
+        if self.context.get_current_time() % BALOON_INTERVAL == 0:
+            self.send_baloons()
         if self.context.get_current_time() % MONKEY_INTERVAL == 0:
             self.place_monkeys(self.get_monkey_type())
         
