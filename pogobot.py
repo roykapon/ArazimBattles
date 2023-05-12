@@ -5,6 +5,7 @@ import math
 BALOON_INTERVAL = 20
 MONKEY_INTERVAL = 15
 SEARCH_STEP = 24
+RATIO = 1
 
 def get_ballon_type(time):
     if 29 <= time and time <= 68:
@@ -26,6 +27,7 @@ class MyBot(ArazimBattlesBot):
     monkey_levels = []
     attempted_position =  5
     attempted_position_y = 5
+    our_monkeys = []
 
     koz = False
     
@@ -56,6 +58,8 @@ class MyBot(ArazimBattlesBot):
                 res = self.context.place_monkey(type, p)
             else:
                 break
+        if res == Exceptions.OK:
+            self.our_monkeys.append({'monkey_type': type, 'position': p, 'index': self.monkey_count})
 
         if res == Exceptions.OK:
             self.monkey_count += 1
@@ -63,18 +67,23 @@ class MyBot(ArazimBattlesBot):
         return res
     
     def run(self) -> None:
-        
-        # kozim:
-
-        if self.context.get_current_time() % BALOON_INTERVAL in [1,2,3]:
-            self.send_baloons()
         if self.context.get_current_time() % MONKEY_INTERVAL == 0:
-            self.place_monkeys()
+            self.place_monkeys(self.get_monkey_type())
         
         self.upgrade_monkeys()
         self.target_baloons()
+    
+    def get_monkey_type(self):
+        print(f'index {self.context.get_current_player_index()}')
+        monkeys = self.our_monkeys
+        darts = [monkey for monkey in monkeys if monkey['monkey_type'] == Monkeys.DART_MONKEY]
+        ninjas = [monkey for monkey in monkeys if monkey['monkey_type'] == Monkeys.NINJA_MONKEY]
+        curr_ratio = len(ninjas) / (len(darts)+1)
+        if curr_ratio > RATIO:
+            return Monkeys.DART_MONKEY
+        return Monkeys.NINJA_MONKEY
 
-    def place_monkeys(self):
+    def place_monkeys(self, monkey_type):
         result = Exceptions.OUT_OF_MAP
         index = 0
         while result != Exceptions.OK and result != Exceptions.NOT_ENOUGH_MONEY:
@@ -86,7 +95,7 @@ class MyBot(ArazimBattlesBot):
             # Place Monkeys
             position = self.bank.pop(0)
             print(f'position: {position}')
-            result = self.place_near_point(Monkeys.NINJA_MONKEY, position) 
+            result = self.place_near_point(monkey_type, position)
             self.bank.append(position)
         if 24 * self.attempted_position + 24 > 200:
             self.attempted_position_y += 1
