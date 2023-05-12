@@ -4,7 +4,7 @@ import math
 
 BALOON_INTERVAL = 20
 MONKEY_INTERVAL = 15
-SEARCH_STEP = 24
+SEARCH_STEP = 14
 RATIO = 1
 
 def get_ballon_type(time):
@@ -58,14 +58,18 @@ class MyBot(ArazimBattlesBot):
         self.create_banks()
     
     def place_near_point(self, type: Monkeys, point) -> Exception:
+        all_ops = set()
+        all_ops.add(point)
         ops = [point]
         p = ops.pop(0)
         res = self.context.place_monkey(type, p)
         count = 0
-        while (res != Exceptions.OK and count < 200):
+        while (res != Exceptions.OK and count < 5000):
             count += 1
             if res in [Exceptions.OUT_OF_MAP, Exceptions.TOO_CLOSE_TO_BLOON_ROUTE, Exceptions.TOO_CLOSE_TO_OTHER_MONKEY]:
-                ops += [(p[0] + SEARCH_STEP, p[1]), (p[0] - SEARCH_STEP, p[1]), (p[0], p[1] + SEARCH_STEP), (p[0], p[1] - SEARCH_STEP)]
+                for op in [(p[0] + SEARCH_STEP, p[1]), (p[0] - SEARCH_STEP, p[1]), (p[0], p[1] + SEARCH_STEP), (p[0], p[1] - SEARCH_STEP)]:
+                    if op not in all_ops:
+                        ops.append(op)
                 p = ops.pop(0)
                 res = self.context.place_monkey(type, p)
             else:
