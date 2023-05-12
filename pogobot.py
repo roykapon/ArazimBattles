@@ -5,7 +5,7 @@ import math
 BALOON_INTERVAL = 20
 MONKEY_INTERVAL = 15
 SEARCH_STEP = 8
-RATIO = 1
+RATIO = 5/3
 
 def get_ballon_type(time):
     if 29 <= time and time <= 68:
@@ -71,17 +71,15 @@ class MyBot(ArazimBattlesBot):
         if time < 60:
             #build only ninja
             self.place_monkeys(Monkeys.NINJA_MONKEY)
-            pass
         elif time < 196:
-            pass
-        else:
-            pass
-        if time % BALOON_INTERVAL == 0 and time > 196:
-            self.send_baloons()
-        if time % MONKEY_INTERVAL == 0:
             self.place_monkeys(self.get_monkey_type())
+            self.upgrade_monkeys()
+        elif time < 230:
+            self.upgrade_monkeys()
+        else:
+            self.send_baloons()
+            self.upgrade_monkeys()
         
-        self.upgrade_monkeys()
         self.target_baloons()
     
     def get_monkey_type(self):
@@ -89,7 +87,9 @@ class MyBot(ArazimBattlesBot):
         monkeys = self.our_monkeys
         darts = [monkey for monkey in monkeys if monkey['monkey_type'] == Monkeys.DART_MONKEY]
         ninjas = [monkey for monkey in monkeys if monkey['monkey_type'] == Monkeys.NINJA_MONKEY]
-        curr_ratio = len(ninjas) / (len(darts)+1)
+        if len(darts) == 0:
+            return Monkeys.NINJA_MONKEY
+        curr_ratio = len(ninjas) / len(darts)
         if curr_ratio > RATIO:
             return Monkeys.DART_MONKEY
         return Monkeys.NINJA_MONKEY
@@ -116,7 +116,7 @@ class MyBot(ArazimBattlesBot):
     def upgrade_monkeys(self):
         for monkey_index in range(self.monkey_count):
             if self.our_monkeys[monkey_index]["monkey_type"] == Monkeys.NINJA_MONKEY:
-                if self.monkey_levels[monkey_index] < 1:
+                if self.monkey_levels[monkey_index] < 0:
                     if self.context.upgrade_monkey(monkey_index, True):
                         self.monkey_levels[monkey_index] += 1
             else:
