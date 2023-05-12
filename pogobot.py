@@ -4,23 +4,23 @@ import math
 
 BALOON_INTERVAL = 20
 MONKEY_INTERVAL = 15
-SEARCH_STEP = 24
+SEARCH_STEP = 8
 RATIO = 1
 
 def get_ballon_type(time):
     if 29 <= time and time <= 68:
-        return {'spaced': EcoBloons.GROUPED_RED, 'packed': EcoBloons.SPACED_BLUE}
+        return {'packed': EcoBloons.GROUPED_RED, 'spaced': EcoBloons.SPACED_BLUE}
     if time <= 122:
-        return {'spaced': EcoBloons.GROUPED_BLUE, 'packed': EcoBloons.SPACED_PINK}
+        return {'packed': EcoBloons.GROUPED_BLUE, 'spaced': EcoBloons.SPACED_PINK}
     if time <= 161:
-        return {'spaced': EcoBloons.GROUPED_GREEN, 'packed': EcoBloons.SPACED_BLACK}
+        return {'packed': EcoBloons.GROUPED_GREEN, 'spaced': EcoBloons.SPACED_BLACK}
     if time <= 196:
-        return {'spaced': EcoBloons.GROUPED_YELLOW, 'packed': EcoBloons.SPACED_WHITE}
+        return {'packed': EcoBloons.GROUPED_YELLOW, 'spaced': EcoBloons.SPACED_WHITE}
     if time <= 237:
-        return {'spaced': EcoBloons.GROUPED_PINK, 'packed': EcoBloons.SPACED_LEAD}
+        return {'packed': EcoBloons.GROUPED_PINK, 'spaced': EcoBloons.SPACED_LEAD}
     if time <= 275:
-        return {'spaced': EcoBloons.GROUPED_WHITE, 'packed': EcoBloons.SPACED_ZEBRA} 
-    return {'spaced': EcoBloons.GROUPED_BLACK, 'packed': EcoBloons.SPACED_RAINBOW}
+        return {'packed': EcoBloons.GROUPED_WHITE, 'spaced': EcoBloons.SPACED_ZEBRA} 
+    return {'packed': EcoBloons.GROUPED_BLACK, 'spaced': EcoBloons.SPACED_RAINBOW}
 
 class MyBot(ArazimBattlesBot):
     monkey_count = 0
@@ -44,16 +44,6 @@ class MyBot(ArazimBattlesBot):
             distance = self.dist(p1, p2)
             self.banks[Monkeys.DART_MONKEY].append((math.floor(p2[0] + 24 * (p2[0] - p1[0]) / distance), math.floor(p2[1] + 24 * (p2[1] - p1[1]) / distance)))
     
-    def update_banks(self):
-        #new_banks = {k.copy(): v.copy() for k, v in self.banks.items()}
-        #for bank in self.banks.values():
-            # def mindist(p):
-            #     m = math.inf
-            #     for l in self.context.get_bloon_route():
-            #         p = l.end
-            #         d1 
-        pass
-    
     def setup(self) -> None:
         self.create_banks()
     
@@ -62,14 +52,12 @@ class MyBot(ArazimBattlesBot):
         p = ops.pop(0)
         res = self.context.place_monkey(type, p)
         count = 0
-        while (res != Exceptions.OK and count < 200):
+        good_exceptions =[Exceptions.OUT_OF_MAP, Exceptions.TOO_CLOSE_TO_BLOON_ROUTE, Exceptions.TOO_CLOSE_TO_OTHER_MONKEY] 
+        while (res in good_exceptions and count < 200):
             count += 1
-            if res in [Exceptions.OUT_OF_MAP, Exceptions.TOO_CLOSE_TO_BLOON_ROUTE, Exceptions.TOO_CLOSE_TO_OTHER_MONKEY]:
-                ops += [(p[0] + SEARCH_STEP, p[1]), (p[0] - SEARCH_STEP, p[1]), (p[0], p[1] + SEARCH_STEP), (p[0], p[1] - SEARCH_STEP)]
-                p = ops.pop(0)
-                res = self.context.place_monkey(type, p)
-            else:
-                break
+            ops += [(p[0] + SEARCH_STEP, p[1]), (p[0] - SEARCH_STEP, p[1]), (p[0], p[1] + SEARCH_STEP), (p[0], p[1] - SEARCH_STEP)]
+            p = ops.pop(0)
+            res = self.context.place_monkey(type, p)
         if res == Exceptions.OK:
             self.our_monkeys.append({'monkey_type': type, 'position': p, 'index': self.monkey_count})
 
@@ -79,14 +67,22 @@ class MyBot(ArazimBattlesBot):
         return res
     
     def run(self) -> None:
-        if self.context.get_current_time() % BALOON_INTERVAL == 0:
+        time = self.context.get_current_time()
+        if time < 60:
+            #build only ninja
+            self.place_monkeys(Monkeys.NINJA_MONKEY)
+            pass
+        elif time < 196:
+            pass
+        else:
+            pass
+        if time % BALOON_INTERVAL == 0 and time > 196:
             self.send_baloons()
-        if self.context.get_current_time() % MONKEY_INTERVAL == 0:
+        if time % MONKEY_INTERVAL == 0:
             self.place_monkeys(self.get_monkey_type())
         
         self.upgrade_monkeys()
         self.target_baloons()
-        self.update_banks()
     
     def get_monkey_type(self):
         print(f'index {self.context.get_current_player_index()}')
@@ -119,9 +115,14 @@ class MyBot(ArazimBattlesBot):
     
     def upgrade_monkeys(self):
         for monkey_index in range(self.monkey_count):
-            if self.monkey_levels[monkey_index] < 4:
-                if self.context.upgrade_monkey(monkey_index, True):
-                    self.monkey_levels[monkey_index] += 1
+            if self.our_monkeys[monkey_index]["monkey_type"] == Monkeys.NINJA_MONKEY:
+                if self.monkey_levels[monkey_index] < 1:
+                    if self.context.upgrade_monkey(monkey_index, True):
+                        self.monkey_levels[monkey_index] += 1
+            else:
+                if self.monkey_levels[monkey_index] < 4:
+                    if self.context.upgrade_monkey(monkey_index, True):
+                        self.monkey_levels[monkey_index] += 1
     
     def target_baloons(self):
         for monkey_index in range(self.monkey_count):
