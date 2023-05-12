@@ -32,6 +32,7 @@ class MyBot(ArazimBattlesBot):
     koz = False
     
     banks = {Monkeys.NINJA_MONKEY: [], Monkeys.DART_MONKEY: []}
+            
     
     def dist(self, p1, p2):
         return math.sqrt((p2[0]-p1[0]) ** 2 + (p2[1]-p1[1]) ** 2)
@@ -128,7 +129,10 @@ class MyBot(ArazimBattlesBot):
         for monkey_index in range(self.monkey_count):
             targets = self.context.get_monkey_targets(monkey_index)
             if len(targets) > 0:
-                self.context.target_bloon(monkey_index, targets[0].index)
+                if self.our_monkeys[monkey_index]["monkey_type"] == Monkeys.DART_MONKEY:
+                    self.context.target_bloon(monkey_index, targets[-1].index)  # semi last
+                else:
+                    self.context.target_bloon(monkey_index, targets[0].index)  # semi first
         self.update_banks()
     
     def get_player_index(self):
