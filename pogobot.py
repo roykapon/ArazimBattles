@@ -32,7 +32,8 @@ class MyBot(ArazimBattlesBot):
     bank_points_prioritues = {}
     
     def create_bank(self):
-        for p1, p2 in self.context.get_bloon_route():
+        for p in self.context.get_bloon_route():
+            p1, p2 = p.start, p.end
             self.bank.append((math.floor((p1[0] + 3 * p2[0])/4), math.floor((p1[1] + 3 * p2[1])/4)))
     
     def update_bank(self):
@@ -41,15 +42,16 @@ class MyBot(ArazimBattlesBot):
     def setup(self) -> None:
         self.create_bank()
     
-    def place_near_point(self, type: Monkeys, point: tuple(float, float)) -> Exception:
+    def place_near_point(self, type: Monkeys, point) -> Exception:
         ops = [point]
         p = ops.pop(0)
         res = self.context.place_monkey(type, p)
         count = 0
         while (res != Exceptions.OK and count < 100):
             count += 1
+            res = self.context.place_monkey(type, p)
             if res in [Exceptions.OUT_OF_MAP, Exceptions.TOO_CLOSE_TO_BLOON_ROUTE, Exceptions.TOO_CLOSE_TO_OTHER_MONKEY]:
-                ops.append((p[0] + 3, p[1]), (p[0] - 3, p[1]), (p[0], p[1] + 3), (p[0], p[1] - 3))
+                ops += [(p[0] + 3, p[1]), (p[0] - 3, p[1]), (p[0], p[1] + 3), (p[0], p[1] - 3)]
                 p = ops.pop(0)
             else:
                 break
@@ -62,18 +64,6 @@ class MyBot(ArazimBattlesBot):
     def run(self) -> None:
         
         # kozim:
-        if not koz:
-            pre_last_point = self.context.get_bloon_route()[-1][0]
-            if self.context.get_map() == Maps.DUNGEON:
-                point = (240, 630)
-                res = self.context.place_monkey(Monkeys.TACK_SHOOTER, point)
-                if res == Exceptions.OK:
-                    koz = True
-            else:
-                point = pre_last_point[0] + 15, pre_last_point[1]
-                res = self.context.place_monkey(Monkeys.TACK_SHOOTER, point)
-                if res == Exceptions.OK:
-                    koz = True
 
         if self.context.get_current_time() % BALOON_INTERVAL in [1,2,3]:
             self.send_baloons()
@@ -94,6 +84,7 @@ class MyBot(ArazimBattlesBot):
             print(f'in loop {index}')
             # Place Monkeys
             position = self.bank.pop(0)
+            print(f'position: {position}')
             result = self.place_near_point(Monkeys.NINJA_MONKEY, position) 
             self.bank.append(position)
         if 24 * self.attempted_position + 24 > 200:
