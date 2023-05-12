@@ -4,6 +4,7 @@ import math
 
 BALOON_INTERVAL = 20
 MONKEY_INTERVAL = 15
+SEARCH_STEP = 24
 
 def get_ballon_type(time):
     if 29 <= time and time <= 68:
@@ -47,12 +48,12 @@ class MyBot(ArazimBattlesBot):
         p = ops.pop(0)
         res = self.context.place_monkey(type, p)
         count = 0
-        while (res != Exceptions.OK and count < 100):
+        while (res != Exceptions.OK and count < 200):
             count += 1
-            res = self.context.place_monkey(type, p)
             if res in [Exceptions.OUT_OF_MAP, Exceptions.TOO_CLOSE_TO_BLOON_ROUTE, Exceptions.TOO_CLOSE_TO_OTHER_MONKEY]:
-                ops += [(p[0] + 3, p[1]), (p[0] - 3, p[1]), (p[0], p[1] + 3), (p[0], p[1] - 3)]
+                ops += [(p[0] + SEARCH_STEP, p[1]), (p[0] - SEARCH_STEP, p[1]), (p[0], p[1] + SEARCH_STEP), (p[0], p[1] - SEARCH_STEP)]
                 p = ops.pop(0)
+                res = self.context.place_monkey(type, p)
             else:
                 break
 
